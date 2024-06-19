@@ -38,34 +38,50 @@ func TestStoreDeleteKey(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
+	s := newStore()
+	defer tearDown(t, s)
+
+	for i := 0; i < 50; i++ {
+
+		key := fmt.Sprintf("foo_%d", i)
+		data := []byte("Some jpg bytes")
+
+		if err := s.writeStream(key, bytes.NewReader(data)); err != nil {
+			t.Error(err)
+		}
+
+		if ok := s.Has(key); !ok {
+			t.Errorf("expected to have key in %s", key)
+		}
+
+		r, err := s.Read(key)
+		if err != nil {
+			t.Error(err)
+		}
+
+		b, _ := io.ReadAll(r)
+
+		fmt.Println(string(b))
+
+		if string(b) != string(data) {
+			t.Errorf("want %s have %s", data, b)
+		}
+
+		s.Delete(key)
+	}
+
+}
+
+func newStore() *Store {
 	opts := StoreOpts{
 		PathTransformFunc: CASPathTransformFunc,
 	}
-	s := NewStore(opts)
-	key := "momsspecials"
-	data := []byte("Some jpg bytes")
+	return NewStore(opts)
 
-	if err := s.writeStream(key, bytes.NewReader(data)); err != nil {
+}
+
+func tearDown(t *testing.T, s *Store) {
+	if err := s.Clear(); err != nil {
 		t.Error(err)
 	}
-
-	if ok := s.Has(key); !ok {
-		t.Errorf("expected to have key in %s", key)
-	}
-
-	r, err := s.Read(key)
-	if err != nil {
-		t.Error(err)
-	}
-
-	b, _ := io.ReadAll(r)
-
-	fmt.Println(string(b))
-
-	if string(b) != string(data) {
-		t.Errorf("want %s have %s", data, b)
-	}
-
-	s.Delete(key)
-
 }
