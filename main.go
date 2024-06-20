@@ -2,15 +2,13 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"github.com/will-kerwin/filr/p2p"
 )
 
-func main() {
-
+func makeServer(listenAddr string, nodes ...string) *FileServer {
 	tcpTransportOpts := p2p.TCPTransportOpts{
-		ListenAddr:    ":3000",
+		ListenAddr:    listenAddr,
 		HandshakeFunc: p2p.NOPHandshakeFunc,
 		Decoder:       p2p.DefaultDecoder{},
 		// TODO: on Peer func
@@ -19,20 +17,22 @@ func main() {
 	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
 
 	fileServerOpts := FileServerOpts{
-		StorageRoot:       "3000_Filr",
+		StorageRoot:       listenAddr + "_filr_network",
 		PathTransformFunc: CASPathTransformFunc,
 		Transport:         tcpTransport,
+		BootstrapNodes:    nodes,
 	}
 
-	s := NewFileServer(fileServerOpts)
+	return NewFileServer(fileServerOpts)
+}
+
+func main() {
+
+	s1 := makeServer(":3000", "")
+	s2 := makeServer(":4000", ":3000")
 
 	go func() {
-		time.Sleep(time.Second * 3)
-		s.Stop()
+		log.Fatal(s1.Start())
 	}()
-
-	if err := s.Start(); err != nil {
-		log.Fatal(err)
-	}
-
+	log.Fatal(s2.Start())
 }
