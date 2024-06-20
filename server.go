@@ -41,6 +41,7 @@ func (s *FileServer) loop() {
 
 	defer func() {
 		log.Println("file server stopped due user quit action")
+		s.Transport.Close()
 	}()
 
 	for {
