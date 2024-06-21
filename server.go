@@ -44,6 +44,12 @@ func (s *FileServer) Stop() {
 }
 
 func (s *FileServer) OnPeer(p p2p.Peer) error {
+	s.peerLock.Lock()
+	defer s.peerLock.Unlock()
+	s.peers[p.RemoteAddr().String()] = p
+
+	log.Printf("connected with remote %s\n", p.RemoteAddr())
+
 	return nil
 }
 
