@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"log"
+	"time"
 
 	"github.com/will-kerwin/filr/p2p"
 )
@@ -37,5 +39,14 @@ func main() {
 	go func() {
 		log.Fatal(s1.Start())
 	}()
-	log.Fatal(s2.Start())
+	go func() {
+		log.Fatal(s2.Start())
+	}()
+
+	time.Sleep(time.Second * 4)
+
+	data := bytes.NewReader([]byte("my big data file here lol"))
+
+	s2.StoreData("key", data)
+	select {}
 }
