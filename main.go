@@ -47,6 +47,7 @@ func main() {
 
 	data := bytes.NewReader([]byte("my big data file here lol"))
 
-	s2.StoreData("key", data)
+	s2.StoreData("myprivatedata", data)
+
 	select {}
 }
