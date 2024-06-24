@@ -25,3 +25,5 @@ go.work.sum
 .env
 
 [Bb]in/
+
+*_filr_network/
