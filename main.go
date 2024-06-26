@@ -49,7 +49,7 @@ func main() {
 	// data := bytes.NewReader([]byte("my big data file here lol"))
 	// s2.Store("myprivatedata", data)
 
-	r, err := s2.Get("foo")
+	r, err := s2.Get("myprivatedata")
 
 	if err != nil {
 		log.Fatal(err)
