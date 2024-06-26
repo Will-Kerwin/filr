@@ -1,7 +1,8 @@
 package main
 
 import (
-	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -45,9 +46,21 @@ func main() {
 
 	time.Sleep(time.Second * 4)
 
-	data := bytes.NewReader([]byte("my big data file here lol"))
+	// data := bytes.NewReader([]byte("my big data file here lol"))
+	// s2.Store("myprivatedata", data)
 
-	s2.StoreData("myprivatedata", data)
+	r, err := s2.Get("foo")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b, err := io.ReadAll(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(b))
 
 	select {}
 }
