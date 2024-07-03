@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/gob"
 	"fmt"
 	"io"
@@ -92,10 +93,12 @@ func (s *FileServer) broadcast(msg *Message) error {
 
 func (s *FileServer) Get(key string) (io.Reader, error) {
 	if s.store.Has(key) {
-		return s.store.Read(key)
+		log.Printf("[%s] serving file (%s) from local disk\n", s.Transport.Addr(), key)
+		_, r, err := s.store.Read(key)
+		return r, err
 	}
 
-	log.Printf("dont have file (%s) locally, fetching from network...\n", key)
+	log.Printf("[%s] dont have file (%s) locally, fetching from network...\n", s.Transport.Addr(), key)
 
 	msg := Message{
 		Payload: MessageGetFile{
@@ -107,21 +110,25 @@ func (s *FileServer) Get(key string) (io.Reader, error) {
 		return nil, err
 	}
 
+	time.Sleep(time.Millisecond * 500)
+
 	for _, peer := range s.peers {
-		fmt.Println("recieving stream from peer: ", peer.RemoteAddr())
-		fileBuffer := new(bytes.Buffer)
-		n, err := io.CopyN(fileBuffer, peer, 10)
+		// first read the file size so we can limit the amount
+		// of bytes that we read from the connection so that it will not keep hanging.
+		var fileSize int64
+		binary.Read(peer, binary.LittleEndian, &fileSize)
+		n, err := s.store.Write(key, io.LimitReader(peer, fileSize))
 		if err != nil {
 			return nil, err
 		}
 
-		log.Println("recieved bytes over the network: ", n)
-		log.Println(fileBuffer.String())
+		log.Printf("[%s} recieved (%d) bytes over the network from (%s)\n", s.Transport.Addr(), n, peer.RemoteAddr())
+
+		peer.CloseStream()
 	}
 
-	select {}
-
-	return nil, nil
+	_, r, err := s.store.Read(key)
+	return r, err
 }
 
 func (s *FileServer) Store(key string, r io.Reader) error {
@@ -220,14 +227,26 @@ func (s *FileServer) handleMessage(from string, msg *Message) error {
 func (s *FileServer) handleMessageGetFile(from string, msg MessageGetFile) error {
 
 	if !s.store.Has(msg.Key) {
-		return fmt.Errorf("need to server file (%s) but it does not exist on disk", msg.Key)
+		return fmt.Errorf("[%s] need to server file (%s) but it does not exist on disk", s.Transport.Addr(), msg.Key)
 	}
 
-	log.Printf("serving file (%s) serving over network\n", msg.Key)
+	log.Printf("[%s] serving file (%s) serving over network\n", s.Transport.Addr(), msg.Key)
 
-	r, err := s.store.Read(msg.Key)
+	fileSize, r, err := s.store.Read(msg.Key)
 	if err != nil {
 		return err
+	}
+
+	// type check && if ok then close reader to not eat up ram
+	// rc, ok := r.(io.ReadCloser); ok {
+	// 	fmt.Println("closing readCloser")
+	// 	defer rc.Close()
+	// }
+
+	switch v := r.(type) {
+	case io.ReadCloser:
+		fmt.Println("closing readCloser")
+		defer v.Close()
 	}
 
 	peer, ok := s.peers[from]
@@ -235,13 +254,16 @@ func (s *FileServer) handleMessageGetFile(from string, msg MessageGetFile) error
 		return fmt.Errorf("peer %s not in map", from)
 	}
 
+	// First send the incomingStream byte to the peer and then we can send the file size
+	// as an int64
+	peer.Send([]byte{p2p.IncomingStream})
+	binary.Write(peer, binary.LittleEndian, fileSize)
 	n, err := io.Copy(peer, r)
-
 	if err != nil {
 		return err
 	}
 
-	log.Printf("wrote (%d) bytes over the network to %s\n", n, from)
+	log.Printf("[%s] wrote (%d) bytes over the network to %s\n", s.Transport.Addr(), n, from)
 
 	return nil
 }

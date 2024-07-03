@@ -37,7 +37,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected to have key in %s", key)
 		}
 
-		r, err := s.Read(key)
+		_, r, err := s.Read(key)
 		if err != nil {
 			t.Error(err)
 		}
