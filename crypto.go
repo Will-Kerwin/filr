@@ -21,6 +21,7 @@ func copyDecrypt(key []byte, src io.Reader, dst io.Writer) (int, error) {
 
 	// read the IV from the given io.Reader which in our case
 	// should be the block.BlockSize() bytes we read.
+
 	// create iv byte array
 	iv := make([]byte, block.BlockSize())
 	// read length into it
@@ -31,15 +32,22 @@ func copyDecrypt(key []byte, src io.Reader, dst io.Writer) (int, error) {
 	var (
 		buf    = make([]byte, 32*1024)
 		stream = cipher.NewCTR(block, iv)
+		// define total writer length starting with size of block i.e. 16 bytes
+		nw = block.BlockSize()
 	)
 
 	for {
 		n, err := src.Read(buf)
 		if n > 0 {
 			stream.XORKeyStream(buf, buf[:n])
-			if _, err := dst.Write(buf[:n]); err != nil {
+			// len of unencrypted
+			nn, err := dst.Write(buf[:n])
+			if err != nil {
 				return 0, err
 			}
+
+			// add file lengnth (nn) to total length (nw)
+			nw += nn
 		}
 		if err == io.EOF {
 			break
@@ -49,7 +57,7 @@ func copyDecrypt(key []byte, src io.Reader, dst io.Writer) (int, error) {
 		}
 	}
 
-	return 0, nil
+	return nw, nil
 }
 
 func copyEncrypt(key []byte, src io.Reader, dst io.Writer) (int, error) {
