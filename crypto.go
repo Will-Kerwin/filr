@@ -9,6 +9,12 @@ import (
 	"io"
 )
 
+func generateID() string {
+	buf := make([]byte, 32)
+	io.ReadFull(rand.Reader, buf)
+	return hex.EncodeToString(buf)
+}
+
 // hashKey creates a one way encrypted hash key
 // which can be used to store the key in file
 func hashKey(key string) string {
