@@ -48,7 +48,6 @@ func main() {
 
 	data := bytes.NewReader([]byte("my big data file here!"))
 	s2.Store("coolpicture.jpg", data)
-	time.Sleep(time.Millisecond * 5)
 
 	// r, err := s2.Get("coolpicture.jpg")
 
