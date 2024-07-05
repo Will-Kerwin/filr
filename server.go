@@ -58,24 +58,6 @@ type MessageGetFile struct {
 	Key string
 }
 
-func (s *FileServer) stream(msg *Message) error {
-
-	// create list of writers
-	peers := []io.Writer{}
-
-	// peer embeds net.Conn which embeds writer
-	// This means that we have access to writer so convert the peers to writers
-	for _, peer := range s.peers {
-		peers = append(peers, peer)
-	}
-
-	// multi writer allows is to write to all peers at once
-	mw := io.MultiWriter(peers...)
-
-	// bam super neat way of doing it
-	return gob.NewEncoder(mw).Encode(msg)
-}
-
 func (s *FileServer) broadcast(msg *Message) error {
 	buf := new(bytes.Buffer)
 	if err := gob.NewEncoder(buf).Encode(msg); err != nil {
