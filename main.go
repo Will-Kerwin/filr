@@ -43,6 +43,7 @@ func main() {
 	go func() {
 		log.Fatal(s1.Start())
 	}()
+
 	go func() {
 		log.Fatal(s2.Start())
 	}()
