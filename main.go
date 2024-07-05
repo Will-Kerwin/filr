@@ -87,31 +87,6 @@ func main() {
 		}
 	}
 
-	key := "picture_1.png"
-
-	data := bytes.NewReader([]byte("my big data file here!"))
-	s3.Store(key, data)
-
-	if err := s3.store.Delete(s3.ID, key); err != nil {
-		log.Fatal(err)
-	}
-
-	r, err := s3.Get(key)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	b, err := io.ReadAll(r)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(string(b))
-
-	if err := s3.Delete(key); err != nil {
-		log.Fatal(err)
-	}
-
 	select {}
 
 }
