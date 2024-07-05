@@ -85,7 +85,7 @@ func (s *FileServer) Get(key string) (io.Reader, error) {
 
 	msg := Message{
 		Payload: MessageGetFile{
-			Key: key,
+			Key: hashKey(key),
 		},
 	}
 
@@ -131,7 +131,7 @@ func (s *FileServer) Store(key string, r io.Reader) error {
 
 	msg := Message{
 		Payload: MessageStoreFile{
-			Key: key,
+			Key: hashKey(key),
 			// add 16 on for encryption iv in stream, i dont like the hardcoding though.
 			Size: size + 16,
 		},
