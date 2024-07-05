@@ -283,7 +283,7 @@ func (s *FileServer) bootstrapNetwork() error {
 			continue
 		}
 		go func(addr string) {
-			fmt.Println("attempting to connect with remoge: ", addr)
+			log.Printf("[%s] attempting to connect with remoge %s\n ", s.Transport.Addr(), addr)
 
 			if err := s.Transport.Dial(addr); err != nil {
 				log.Println("Dial error: ", err)
