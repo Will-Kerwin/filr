@@ -10,31 +10,37 @@
 
 > Using free code camp to teach me lower level networking skills as well as further learning with go.
 
-## Install
+## Setup
+
+### Install
 
 ```sh
 make build
 ```
 
-## Usage
+### Usage
 
 ```sh
 make run
 ```
 
-## Run tests
+### Run tests
 
 ```sh
 make test
 ```
 
+## Suggestions for continue development
+
+- [x] Delete isnt present in the server so implement cascade delete through network
+
 ## Author
 
 👤 **Will Keriwn**
 
-* Twitter: [@WillKerwin](https://twitter.com/WillKerwin)
-* Github: [@will-kerwin](https://github.com/will-kerwin)
-* LinkedIn: [@will-kerwin](https://linkedin.com/in/will-kerwin)
+- Twitter: [@WillKerwin](https://twitter.com/WillKerwin)
+- Github: [@will-kerwin](https://github.com/will-kerwin)
+- LinkedIn: [@will-kerwin](https://linkedin.com/in/will-kerwin)
 
 ## Show your support
 

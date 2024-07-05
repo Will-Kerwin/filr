@@ -66,6 +66,11 @@ type MessageGetFile struct {
 	ID  string
 	Key string
 }
+type MessageDeleteFile struct {
+	ID     string
+	Key    string
+	Delete bool
+}
 
 func (s *FileServer) broadcast(msg *Message) error {
 	buf := new(bytes.Buffer)
@@ -173,6 +178,33 @@ func (s *FileServer) Store(key string, r io.Reader) error {
 	return nil
 }
 
+func (s *FileServer) Delete(key string) error {
+
+	msg := Message{
+		Payload: MessageDeleteFile{
+			ID:     s.ID,
+			Key:    hashKey(key),
+			Delete: true,
+		},
+	}
+
+	if err := s.broadcast(&msg); err != nil {
+		return err
+	}
+
+	log.Printf("[%s] sent delete file message\n", s.Transport.Addr())
+
+	if err := s.store.Delete(s.ID, key); err != nil {
+		return err
+	}
+
+	if err := s.store.CleanSink(s.ID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *FileServer) Stop() {
 	close(s.quitch)
 }
@@ -220,6 +252,27 @@ func (s *FileServer) handleMessage(from string, msg *Message) error {
 		return s.handleMessageStoreFile(from, v)
 	case MessageGetFile:
 		return s.handleMessageGetFile(from, v)
+	case MessageDeleteFile:
+		return s.handleMessageDeleteFile(v)
+	}
+
+	return nil
+}
+
+func (s *FileServer) handleMessageDeleteFile(msg MessageDeleteFile) error {
+
+	if !s.store.Has(msg.ID, msg.Key) {
+		return fmt.Errorf("[%s] need to server file (%s) but it does not exist on disk", s.Transport.Addr(), msg.Key)
+	}
+
+	log.Printf("[%s] deleting file (%s)\n", s.Transport.Addr(), msg.Key)
+
+	if err := s.store.Delete(msg.ID, msg.Key); err != nil {
+		return err
+	}
+
+	if err := s.store.CleanSink(msg.ID); err != nil {
+		return err
 	}
 
 	return nil
@@ -322,4 +375,5 @@ func (s *FileServer) Start() error {
 func init() {
 	gob.Register(MessageStoreFile{})
 	gob.Register(MessageGetFile{})
+	gob.Register(MessageDeleteFile{})
 }

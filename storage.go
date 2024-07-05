@@ -114,6 +114,20 @@ func (s *Store) Delete(id string, key string) error {
 	return os.RemoveAll(firstPathNameWithRoot)
 }
 
+func (s *Store) CleanSink(id string) error {
+	dir := fmt.Sprintf("%s/%s", s.Root, id)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	if len(entries) == 0 {
+		os.RemoveAll(dir)
+	}
+
+	return nil
+}
+
 func (s *Store) Write(id string, key string, r io.Reader) (int64, error) {
 	return s.writeStream(id, key, r)
 }
