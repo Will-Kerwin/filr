@@ -113,10 +113,8 @@ func (t *TCPTransport) startAcceptLoop() {
 		}
 
 		if err != nil {
-			fmt.Printf("TCP accept error: %s\n", err)
+			log.Printf("TCP accept error: %s\n", err)
 		}
-
-		fmt.Printf("new incoming connection: %+v\n", conn)
 
 		go t.handleConn(conn, false)
 	}

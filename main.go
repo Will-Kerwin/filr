@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -46,20 +48,28 @@ func main() {
 
 	time.Sleep(time.Second * 2)
 
-	data := bytes.NewReader([]byte("my big data file here!"))
-	s2.Store("coolpicture.jpg", data)
+	for i := 0; i < 20; i++ {
 
-	// r, err := s2.Get("coolpicture.jpg")
+		key := fmt.Sprintf("picture_%d.png", i)
 
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+		data := bytes.NewReader([]byte("my big data file here!"))
+		s2.Store(key, data)
 
-	// b, err := io.ReadAll(r)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+		if err := s2.store.Delete(key); err != nil {
+			log.Fatal(err)
+		}
 
-	// fmt.Println(string(b))
+		r, err := s2.Get(key)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		b, err := io.ReadAll(r)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(string(b))
+
+	}
 }
